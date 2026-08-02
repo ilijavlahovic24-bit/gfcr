@@ -2,7 +2,7 @@
 
 Discrete-event simulator for GPU interconnect fabrics (fat-tree topologies) with a custom congestion-aware adaptive routing engine, built to model and reduce tail latency under the traffic patterns typical of distributed ML training (all-reduce, all-to-all/MoE, pipeline parallelism).
 
-**Status:** Planned — development begins after [FerumFS](#) reaches its Raft-layer milestone.
+**Status:** Planned
 
 ## Overview
 
