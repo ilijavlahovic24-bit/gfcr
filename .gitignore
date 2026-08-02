@@ -1,1 +1,3 @@
 /target/
+/crates/sim-core/target/
+/crates/topology/target/
