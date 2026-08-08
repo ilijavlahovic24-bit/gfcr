@@ -8,7 +8,10 @@ typical of distributed ML training (all-reduce, all-to-all/MoE, pipeline paralle
 
 ## Overview
 
-Communication patterns dominate wall-clock time in large-scale distributed training, and static routing (ECMP) degrades badly under bursty "elephant flow" traffic such as gradient all-reduce or MoE expert dispatch. GFCS-R simulates a GPU interconnect fabric end-to-end - topology, traffic, and routing - to measure that degradation and demonstrate improvement through congestion-aware adaptive routing.
+Communication patterns dominate wall-clock time in large-scale distributed training, and static routing (ECMP) 
+degrades badly under bursty "elephant flow" traffic such as gradient all-reduce or MoE expert dispatch. 
+GFCS-R simulates a GPU interconnect fabric end-to-end - topology, traffic, 
+and routing - to measure that degradation and demonstrate improvement through congestion-aware adaptive routing.
 
 ## Architecture
 
