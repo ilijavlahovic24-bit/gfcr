@@ -1,6 +1,8 @@
 # GFCS-R — GPU Fabric Congestion Simulation & Router
 
-Discrete-event simulator for GPU interconnect fabrics (fat-tree topologies) with a custom congestion-aware adaptive routing engine, built to model and reduce tail latency under the traffic patterns typical of distributed ML training (all-reduce, all-to-all/MoE, pipeline parallelism).
+Discrete-event simulator for GPU interconnect fabrics (fat-tree topologies) with a 
+custom congestion-aware adaptive routing engine, built to model and reduce tail latency under the traffic patterns 
+typical of distributed ML training (all-reduce, all-to-all/MoE, pipeline parallelism).
 
 **Status:** Planned
 
@@ -51,10 +53,6 @@ gfcs-r/
 └── docs/adr/           # architecture decision records
 ```
 
-## Development Plan
-
-Full phase-by-phase breakdown (topology → simulator core → traffic generator → ECMP baseline → adaptive router → metrics/visualization → polish) is tracked in `docs/DEVELOPMENT_PLAN.md`, along with per-phase definitions of done.
-
 ## Architecture Decision Records
 
 Key design decisions are documented as ADRs in `docs/adr/`, including:
@@ -62,7 +60,9 @@ Key design decisions are documented as ADRs in `docs/adr/`, including:
 
 ## Relation to Other Projects
 
-GFCS-R is designed to optionally consume traffic traces from [FerumFS](#) (dataset shard reads, checkpoint write bursts) as an additional workload generator, connecting the storage and network layers of a distributed training pipeline — via a decoupled trace-file interface, not a code dependency.
+GFCS-R is designed to optionally consume traffic traces from [FerumFS](#) 
+(dataset shard reads, checkpoint write bursts) as an additional workload generator, connecting the storage and 
+network layers of a distributed training pipeline — via a decoupled trace-file interface, not a code dependency.
 
 ## Roadmap
 
