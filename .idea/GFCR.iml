@@ -8,6 +8,7 @@
       <excludeFolder url="file://$MODULE_DIR$/crates/sim-core/target" />
       <excludeFolder url="file://$MODULE_DIR$/crates/topology/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
+      <excludeFolder url="file://$MODULE_DIR$/doc/references" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

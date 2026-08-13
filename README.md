@@ -77,3 +77,6 @@ network layers of a distributed training pipeline - via a decoupled trace-file i
 - [ ] Phase 6 - Metrics & visualization
 - [ ] Phase 7 - Testing, comparison, polish
 - [ ] Phase 8 (stretch) - Flit-level fidelity, dragonfly topology, FerumFS trace integration
+
+##Resources
+1.[A Scalable, Commodity Data Center Network Architecture], Mohammad Al-Fares, Alexander Loukissas , Amin Vahdat
