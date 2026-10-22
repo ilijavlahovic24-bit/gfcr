@@ -4,3 +4,6 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+topology = { path = "../topology" }
+petgraph.workspace = true
+thiserror.workspace = true
