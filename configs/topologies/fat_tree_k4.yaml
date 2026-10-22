@@ -1,0 +1,8 @@
+topology:
+  type: fat_tree
+  k: 4
+
+links:
+  bandwidth_gbps: 100.0
+  latency_ns: 500
+  buffer_size: 100000

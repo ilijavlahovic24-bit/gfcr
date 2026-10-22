@@ -105,30 +105,36 @@ mod tests {
     #[test]
     fn counts_match_formulas_k4() {
         let g = generate(4, link()).unwrap();
-        assert_eq!(g.node_count(), (5 * 4 * 4) / 4); // 20
+        let expected_switches = (5 * 4 * 4) / 4; // 20
+        let expected_hosts = (4 * 4 * 4) / 4;    // 16
+
+        assert_eq!(g.node_count(), expected_switches + expected_hosts); // 36
         assert_eq!(g.edge_count(), (3 * 4 * 4 * 4) / 4); // 48
-        assert_eq!(g.hosts().len(), 4 * 4 * 4 / 4); // 16
+        assert_eq!(g.hosts().len(), expected_hosts); // 16
     }
 
     #[test]
     fn counts_match_formulas_k8() {
         let g = generate(8, link()).unwrap();
-        assert_eq!(g.node_count(), 5 * 8 * 8 / 4); // 80
-        assert_eq!(g.edge_count(), 3 * 8 * 8 * 8 / 4); // 384
-        assert_eq!(g.hosts().len(), 8 * 8 * 8 / 4); // 128
+        let expected_switches = (5 * 8 * 8) / 4; // 80
+        let expected_hosts = (8 * 8 * 8) / 4;    // 128
+
+        assert_eq!(g.node_count(), expected_switches + expected_hosts); // 208
+        assert_eq!(g.edge_count(), (3 * 8 * 8 * 8) / 4); // 384
+        assert_eq!(g.hosts().len(), expected_hosts); // 128
     }
 
     #[test]
     fn graph_is_connected() {
         for k in [2, 4, 6, 8] {
             let g = generate(k, link()).unwrap();
-            assert!(g.is_connected(), "k={k} not empty");
+            assert!(g.is_connected(), "k={k} nije povezan");
         }
     }
 
     #[test]
     fn invalid_k_rejected() {
         assert!(generate(0, link()).is_err());
-        assert!(generate(3, link()).is_err()); // odd
+        assert!(generate(3, link()).is_err()); // neparno
     }
 }
