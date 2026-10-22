@@ -1,0 +1,11 @@
+[package]
+name = "traffic-gen"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+sim-core = { path = "../sim-core" }
+petgraph.workspace = true
+
+[dev-dependencies]
+topology = { path = "../topology" }

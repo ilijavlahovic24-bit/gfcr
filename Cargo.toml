@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/topology", "crates/sim-core", "crates/cli"]
+members = ["crates/topology", "crates/sim-core", "crates/traffic-gen", "crates/cli"]
 
 [workspace.package]
 version = "0.1.0"
