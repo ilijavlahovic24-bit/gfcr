@@ -5,6 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/sim-core/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/topology/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/cli/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/crates/sim-core/target" />
       <excludeFolder url="file://$MODULE_DIR$/crates/topology/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />

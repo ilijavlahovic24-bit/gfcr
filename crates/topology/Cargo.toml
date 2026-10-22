@@ -1,8 +1,10 @@
 [package]
 name = "topology"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
 
 [dependencies]
-petgraph = "0.8.3"
-serde = { version = "1.0.229", features = ["derive"] }
+petgraph.workspace = true
+serde.workspace = true
+serde_yaml.workspace = true
+thiserror.workspace = true

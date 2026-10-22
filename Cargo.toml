@@ -1,6 +1,15 @@
-[package]
-name = "GFCR"
-version = "0.1.0"
-edition = "2024"
+[workspace]
+resolver = "2"
+members = ["crates/topology", "crates/cli"]
 
-[dependencies]
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+
+[workspace.dependencies]
+petgraph = "0.6"
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
+thiserror = "1"
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
