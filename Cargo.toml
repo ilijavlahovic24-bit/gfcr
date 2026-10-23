@@ -1,6 +1,13 @@
 [workspace]
 resolver = "2"
-members = ["crates/topology", "crates/sim-core", "crates/routing", "crates/traffic-gen", "crates/cli"]
+members = [
+    "crates/topology",
+    "crates/sim-core",
+    "crates/routing",
+    "crates/traffic-gen",
+    "crates/metrics",
+    "crates/cli",
+]
 
 [workspace.package]
 version = "0.1.0"
@@ -10,6 +17,8 @@ edition = "2021"
 petgraph = "0.6"
 serde = { version = "1", features = ["derive"] }
 serde_yaml = "0.9"
+serde_json = "1" # <-- DODATO
 thiserror = "1"
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
+rand = "0.8" # <-- DODATO (pošto ga koristimo u ecmp.rs)

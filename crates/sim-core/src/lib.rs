@@ -22,8 +22,9 @@ pub mod flow;
 pub mod link_model;
 pub mod path;
 
-pub use engine::{SimulationResult, Simulator};
+pub use engine::{SimulationResult, Simulator,LinkUtilizationRecord};
 pub use flow::{Flow, FlowId, FlowResult};
 pub use topology::TopologyGraph;
+
 pub mod router;
 pub use router::Router;

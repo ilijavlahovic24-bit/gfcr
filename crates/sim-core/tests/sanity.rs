@@ -1,6 +1,7 @@
 //! Faza 2 sanity checks: single-flow FCT must match the analytical minimum
 //! within ±5%. Also checks two disjoint flows don't interfere.
 
+use std::collections::HashMap;
 use petgraph::graph::{EdgeIndex, NodeIndex};
 use sim_core::{Flow, Router, Simulator};
 use sim_core::path::shortest_path;
@@ -8,7 +9,14 @@ use topology::fat_tree::generate;
 use topology::graph::Link;
 struct MockRouter;
 impl Router for MockRouter {
-    fn route(&self, graph: &topology::TopologyGraph, src: NodeIndex, dst: NodeIndex, _flow_id: u64) -> Option<Vec<EdgeIndex>> {
+    fn route(
+        &self,
+        graph: &topology::TopologyGraph,
+        src: NodeIndex,
+        dst: NodeIndex,
+        _flow_id: u64,
+        _link_load: &HashMap<EdgeIndex, f64>, 
+    ) -> Option<Vec<EdgeIndex>> {
         shortest_path(graph, src, dst)
     }
 }

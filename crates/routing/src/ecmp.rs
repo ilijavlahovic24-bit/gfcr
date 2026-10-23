@@ -15,6 +15,7 @@ impl Router for EcmpRouter {
         src: NodeIndex,
         dst: NodeIndex,
         flow_id: u64,
+        _link_load: &HashMap<EdgeIndex, f64>,
     ) -> Option<Vec<EdgeIndex>> {
         if src == dst {
             return Some(vec![]);

@@ -20,6 +20,14 @@ pub struct SimulationResult {
     pub completed_flows: Vec<FlowResult>,
     /// Wall-clock simulation time at which the last event fired.
     pub sim_time_ns: u64,
+    pub utilization_history: Vec<LinkUtilizationRecord>,
+}
+
+#[derive(Debug, Clone)]
+pub struct LinkUtilizationRecord {
+    pub time_ns: u64,
+    pub link_id: usize, // EdgeIndex
+    pub utilization_pct: f64,
 }
 
 pub struct Simulator {
@@ -38,6 +46,7 @@ pub struct Simulator {
     events: EventQueue,
     now_ns: u64,
     completed_flows: Vec<FlowResult>,
+    utilization_history: Vec<LinkUtilizationRecord>,
 }
 
 impl Simulator {
@@ -60,6 +69,7 @@ impl Simulator {
             events: EventQueue::new(),
             now_ns: 0,
             completed_flows: Vec::new(),
+            utilization_history: Vec::new(),
         };
 
         for flow in input_flows {
@@ -85,13 +95,32 @@ impl Simulator {
         SimulationResult {
             completed_flows: self.completed_flows,
             sim_time_ns: self.now_ns,
+            utilization_history: self.utilization_history, // ISPRAVLJENO
         }
     }
 
     fn on_flow_arrival(&mut self, flow: Flow) {
-        // Delegate path selection to the injected router.
-        let Some(path_edges) = self.router.route(&self.graph, flow.src, flow.dst, flow.id) else {
-            // Unreachable destination — drop the flow.
+        // 1. Calculate current load on all links (before adding the new flow)
+        let mut link_load: HashMap<EdgeIndex, f64> = HashMap::new();
+        for (eid, bw) in &self.link_bw_bpns {
+            let (a, b) = self.graph.inner().edge_endpoints(*eid).unwrap();
+            let flows_ab = self.link_active_flows.get(&(a, b)).map(|v| v.as_slice()).unwrap_or(&[]);
+            let flows_ba = self.link_active_flows.get(&(b, a)).map(|v| v.as_slice()).unwrap_or(&[]);
+
+            let mut total_rate = 0.0;
+            for fid in flows_ab.iter().chain(flows_ba.iter()) {
+                if let Some(f) = self.active_flows.get(fid) {
+                    // If the flow has finished transmitting, it doesn't load the link anymore
+                    if f.tx_complete_ns.is_none() || self.now_ns < f.tx_complete_ns.unwrap() {
+                        total_rate += f.current_rate_bpns;
+                    }
+                }
+            }
+            link_load.insert(*eid, total_rate / bw);
+        }
+
+        // 2. Delegate path selection to the injected router with current load info.
+        let Some(path_edges) = self.router.route(&self.graph, flow.src, flow.dst, flow.id, &link_load) else {
             return;
         };
 
@@ -138,18 +167,15 @@ impl Simulator {
     }
 
     fn on_flow_complete(&mut self, flow_id: FlowId, expected_ns: u64) {
-        // Ignore if already completed.
         let Some(flow) = self.active_flows.get(&flow_id) else {
             return;
         };
-        // Ignore if the flow has been rescheduled since this event was pushed.
         if flow.expected_complete_ns != Some(expected_ns) {
             return;
         }
 
         let flow = self.active_flows.remove(&flow_id).unwrap();
 
-        // Remove flow from directed links.
         for dir_edge in &flow.directed_edges {
             if let Some(list) = self.link_active_flows.get_mut(dir_edge) {
                 list.retain(|id| *id != flow_id);
@@ -171,15 +197,9 @@ impl Simulator {
         self.recompute_and_reschedule();
     }
 
-    /// Core of the fluid model. Called after every state change (arrival or
-    /// completion). Steps:
-    ///   1. Advance every active flow's `remaining_bytes` using its OLD rate.
-    ///   2. Compute NEW rates (min over path of link fair share).
-    ///   3. Project each flow's delivery time and schedule a FlowComplete.
     fn recompute_and_reschedule(&mut self) {
         let now = self.now_ns;
 
-        // --- Step 1: advance progress using the old rate.
         for flow in self.active_flows.values_mut() {
             let elapsed = now.saturating_sub(flow.last_update_ns);
             if elapsed == 0 {
@@ -189,7 +209,6 @@ impl Simulator {
             if flow.remaining_bytes > delta {
                 flow.remaining_bytes -= delta;
             } else {
-                // Transmission completed during this interval.
                 let rate = flow.current_rate_bpns.max(f64::EPSILON);
                 let exact_tx_ns =
                     flow.last_update_ns + (flow.remaining_bytes / rate).ceil() as u64;
@@ -199,14 +218,9 @@ impl Simulator {
             flow.last_update_ns = now;
         }
 
-        // --- Step 2: compute new rates. Two-pass to keep the borrow checker
-        // happy: collect first, then apply.
         let mut new_rates: Vec<(FlowId, f64)> = Vec::with_capacity(self.active_flows.len());
         for (fid, flow) in &self.active_flows {
             let mut rate = f64::INFINITY;
-
-            // Zip path_edges and directed_edges to look up the undirected link
-            // parameters while counting active flows on the specific direction.
             for (&eid, dir_edge) in flow.path_edges.iter().zip(flow.directed_edges.iter()) {
                 let n = self
                     .link_active_flows
@@ -230,7 +244,6 @@ impl Simulator {
             }
         }
 
-        // --- Step 3: project delivery and schedule.
         let mut to_schedule: Vec<(u64, FlowId)> = Vec::with_capacity(self.active_flows.len());
         for flow in self.active_flows.values_mut() {
             let delivery = if let Some(tx) = flow.tx_complete_ns {
@@ -242,7 +255,7 @@ impl Simulator {
             } else {
                 continue;
             };
-            let delivery = delivery.max(now); // defensive clamp
+            let delivery = delivery.max(now);
             flow.expected_complete_ns = Some(delivery);
             to_schedule.push((delivery, flow.id));
         }
@@ -255,6 +268,31 @@ impl Simulator {
                     expected_ns: delivery,
                 },
             );
+        }
+
+        // --- Step 4: Record link utilization.
+        for (dir_edge, flow_ids) in &self.link_active_flows {
+            if flow_ids.is_empty() { continue; }
+
+            let (a, b) = *dir_edge;
+            let eid = self.graph.inner().find_edge(a, b).unwrap();
+            let bw = self.link_bw_bpns[&eid];
+
+            let mut total_rate = 0.0;
+            for fid in flow_ids {
+                if let Some(flow) = self.active_flows.get(fid) {
+                    if flow.tx_complete_ns.is_none() || now < flow.tx_complete_ns.unwrap() {
+                        total_rate += flow.current_rate_bpns;
+                    }
+                }
+            }
+
+            let utilization_pct = (total_rate / bw) * 100.0;
+            self.utilization_history.push(LinkUtilizationRecord {
+                time_ns: now,
+                link_id: eid.index(),
+                utilization_pct,
+            });
         }
     }
 }
