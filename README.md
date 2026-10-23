@@ -4,7 +4,7 @@ Discrete-event simulator for GPU interconnect fabrics (fat-tree topologies) with
 custom congestion-aware adaptive routing engine, built to model and reduce tail latency under the traffic patterns 
 typical of distributed ML training (all-reduce, all-to-all/MoE, pipeline parallelism).
 
-**Status:** Planned
+**Status:** In progress
 
 ## Overview
 
@@ -78,5 +78,5 @@ network layers of a distributed training pipeline - via a decoupled trace-file i
 - [ ] Phase 7 - Testing, comparison, polish
 - [ ] Phase 8 (stretch) - Flit-level fidelity, dragonfly topology, FerumFS trace integration
 
-##Resources
-1.[A Scalable, Commodity Data Center Network Architecture], Mohammad Al-Fares, Alexander Loukissas , Amin Vahdat
+## Resources
+1. [A Scalable, Commodity Data Center Network Architecture], Mohammad Al-Fares, Alexander Loukissas , Amin Vahdat
