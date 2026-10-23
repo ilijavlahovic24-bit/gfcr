@@ -9,3 +9,4 @@ petgraph.workspace = true
 
 [dev-dependencies]
 topology = { path = "../topology" }
+routing = { path = "../routing" }

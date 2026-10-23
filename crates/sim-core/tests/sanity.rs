@@ -1,11 +1,17 @@
 //! Faza 2 sanity checks: single-flow FCT must match the analytical minimum
 //! within ±5%. Also checks two disjoint flows don't interfere.
 
-use petgraph::graph::NodeIndex;
-use sim_core::{Flow, Simulator};
+use petgraph::graph::{EdgeIndex, NodeIndex};
+use sim_core::{Flow, Router, Simulator};
+use sim_core::path::shortest_path;
 use topology::fat_tree::generate;
 use topology::graph::Link;
-
+struct MockRouter;
+impl Router for MockRouter {
+    fn route(&self, graph: &topology::TopologyGraph, src: NodeIndex, dst: NodeIndex, _flow_id: u64) -> Option<Vec<EdgeIndex>> {
+        shortest_path(graph, src, dst)
+    }
+}
 fn k4_graph() -> topology::TopologyGraph {
     generate(
         4,
@@ -43,7 +49,7 @@ fn single_flow_across_pods_matches_theory() {
         start_time_ns: 0,
     };
 
-    let result = Simulator::new(g, vec![flow]).run();
+    let result = Simulator::new(g, vec![flow], Box::new(MockRouter)).run();
 
     assert_eq!(result.completed_flows.len(), 1);
     let fct = result.completed_flows[0].fct_ns;
@@ -78,7 +84,7 @@ fn single_flow_same_pod_matches_theory() {
         start_time_ns: 0,
     };
 
-    let result = Simulator::new(g, vec![flow]).run();
+    let result = Simulator::new(g, vec![flow], Box::new(MockRouter)).run();
     let fct = result.completed_flows[0].fct_ns;
 
     let path_latency = 4 * 500; // 2000
@@ -114,7 +120,8 @@ fn two_disjoint_flows_do_not_interfere() {
         },
     ];
 
-    let result = Simulator::new(g, flows).run();
+    // ISPRAVLJENO: vec![flow] -> flows
+    let result = Simulator::new(g, flows, Box::new(MockRouter)).run();
     assert_eq!(result.completed_flows.len(), 2);
 
     // Both are 2-hop paths (host–edge–host), so ~1000 + 82 ns expected.

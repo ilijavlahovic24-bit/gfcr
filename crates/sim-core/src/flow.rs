@@ -44,6 +44,7 @@ pub(crate) struct ActiveFlow {
     pub tx_complete_ns: Option<u64>,
 
     pub path_edges: Vec<EdgeIndex>,
+    pub directed_edges: Vec<(NodeIndex, NodeIndex)>,
     pub path_latency_ns: u64,
 
     /// Current rate in bytes per nanosecond. Recomputed on every state change.

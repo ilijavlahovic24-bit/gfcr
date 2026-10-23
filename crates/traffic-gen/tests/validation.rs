@@ -1,8 +1,8 @@
+use routing::ecmp::EcmpRouter;
 use sim_core::Simulator;
 use topology::fat_tree;
 use topology::graph::Link;
 use traffic_gen::{all_to_all, ring_allreduce};
-
 #[test]
 fn ring_all_reduce_matches_theory() {
     let n = 4;
@@ -40,18 +40,19 @@ fn ring_all_reduce_matches_theory() {
         flow.dst = target_hosts[flow.dst.index()];
     }
 
-    let result = Simulator::new(g, flows).run();
+    let result = Simulator::new(g, flows, Box::new(EcmpRouter)).run();
 
     // Theoretical transmission time: 2*(N-1)/N * data_size / bandwidth
     let theoretical_tx = 2.0 * (n - 1) as f64 / n as f64 * (data_size as f64 / bandwidth_bpns);
 
     // Last flow also finishes its 6-hop propagation
     let expected_fct = theoretical_tx + (6 * latency_ns) as f64;
+    
+    // The total completion time is when the last flow finishes.
+    let max_end_time = result.completed_flows.iter().map(|f| f.end_time_ns).max().unwrap() as f64;
 
-    let max_fct = result.completed_flows.iter().map(|f| f.fct_ns).max().unwrap() as f64;
-
-    let diff = (max_fct - expected_fct).abs();
-    assert!(diff / expected_fct < 0.05, "FCT {} outside 5% of expected {}", max_fct, expected_fct);
+    let diff = (max_end_time - expected_fct).abs();
+    assert!(diff / expected_fct < 0.05, "Total time {} outside 5% of expected {}", max_end_time, expected_fct);
 }
 
 #[test]

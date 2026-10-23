@@ -25,3 +25,5 @@ pub mod path;
 pub use engine::{SimulationResult, Simulator};
 pub use flow::{Flow, FlowId, FlowResult};
 pub use topology::TopologyGraph;
+pub mod router;
+pub use router::Router;

@@ -1,20 +1,20 @@
 //! The discrete-event simulation engine.
 //!
-//! See lib.rs for the modeling overview. This module wires together:
+//! See lib.rs for the modelling overview. This module wires together:
 //! - the event queue,
-//! - per-link active-flow bookkeeping,
+//! - per-link active-flow bookkeeping (full-duplex),
 //! - the fluid rate computation (min-over-path fair share),
 //! - per-flow progress projection and completion scheduling.
 
 use std::collections::HashMap;
 
-use petgraph::graph::EdgeIndex;
+use petgraph::graph::{EdgeIndex, NodeIndex};
 use topology::TopologyGraph;
 
 use crate::event::{EventKind, EventQueue};
 use crate::flow::{ActiveFlow, Flow, FlowId, FlowResult};
 use crate::link_model::gbps_to_bytes_per_ns;
-use crate::path::shortest_path;
+use crate::router::Router;
 
 pub struct SimulationResult {
     pub completed_flows: Vec<FlowResult>,
@@ -24,6 +24,7 @@ pub struct SimulationResult {
 
 pub struct Simulator {
     graph: TopologyGraph,
+    router: Box<dyn Router>,
 
     /// Pre-computed link parameters, indexed by EdgeIndex.
     link_bw_bpns: HashMap<EdgeIndex, f64>,
@@ -31,7 +32,8 @@ pub struct Simulator {
 
     /// State.
     active_flows: HashMap<FlowId, ActiveFlow>,
-    link_active_flows: HashMap<EdgeIndex, Vec<FlowId>>,
+    /// Tracks active flows per directed link (src, dst) to model full-duplex.
+    link_active_flows: HashMap<(NodeIndex, NodeIndex), Vec<FlowId>>,
 
     events: EventQueue,
     now_ns: u64,
@@ -39,7 +41,7 @@ pub struct Simulator {
 }
 
 impl Simulator {
-    pub fn new(graph: TopologyGraph, input_flows: Vec<Flow>) -> Self {
+    pub fn new(graph: TopologyGraph, input_flows: Vec<Flow>, router: Box<dyn Router>) -> Self {
         let mut link_bw_bpns = HashMap::new();
         let mut link_latency_ns = HashMap::new();
         for eid in graph.inner().edge_indices() {
@@ -50,6 +52,7 @@ impl Simulator {
 
         let mut sim = Self {
             graph,
+            router,
             link_bw_bpns,
             link_latency_ns,
             active_flows: HashMap::new(),
@@ -86,11 +89,21 @@ impl Simulator {
     }
 
     fn on_flow_arrival(&mut self, flow: Flow) {
-        let Some(path_edges) = shortest_path(&self.graph, flow.src, flow.dst) else {
-            // Unreachable destination — drop the flow. In MVP topologies
-            // (fat-tree) this never happens; validated by is_connected test.
+        // Delegate path selection to the injected router.
+        let Some(path_edges) = self.router.route(&self.graph, flow.src, flow.dst, flow.id) else {
+            // Unreachable destination — drop the flow.
             return;
         };
+
+        // Reconstruct directed edges to properly track full-duplex links.
+        let mut cur = flow.src;
+        let mut directed_edges = Vec::with_capacity(path_edges.len());
+        for &eid in &path_edges {
+            let (a, b) = self.graph.inner().edge_endpoints(eid).unwrap();
+            let next = if a == cur { b } else { a };
+            directed_edges.push((cur, next));
+            cur = next;
+        }
 
         let path_latency_ns: u64 = path_edges
             .iter()
@@ -107,14 +120,15 @@ impl Simulator {
             last_update_ns: self.now_ns,
             tx_complete_ns: None,
             path_edges: path_edges.clone(),
+            directed_edges: directed_edges.clone(),
             path_latency_ns,
             current_rate_bpns: 0.0,
             expected_complete_ns: None,
         };
 
-        for eid in &path_edges {
+        for dir_edge in &directed_edges {
             self.link_active_flows
-                .entry(*eid)
+                .entry(*dir_edge)
                 .or_default()
                 .push(flow.id);
         }
@@ -134,8 +148,10 @@ impl Simulator {
         }
 
         let flow = self.active_flows.remove(&flow_id).unwrap();
-        for eid in &flow.path_edges {
-            if let Some(list) = self.link_active_flows.get_mut(eid) {
+
+        // Remove flow from directed links.
+        for dir_edge in &flow.directed_edges {
+            if let Some(list) = self.link_active_flows.get_mut(dir_edge) {
                 list.retain(|id| *id != flow_id);
             }
         }
@@ -160,10 +176,6 @@ impl Simulator {
     ///   1. Advance every active flow's `remaining_bytes` using its OLD rate.
     ///   2. Compute NEW rates (min over path of link fair share).
     ///   3. Project each flow's delivery time and schedule a FlowComplete.
-    ///
-    /// Cost is O(F * L) per event, where F = active flows and L = path length.
-    /// Fine for MVP sizes. Progressive-filling upgrade would touch only the
-    /// flows affected by the changed links, but that's an optimization.
     fn recompute_and_reschedule(&mut self) {
         let now = self.now_ns;
 
@@ -192,14 +204,17 @@ impl Simulator {
         let mut new_rates: Vec<(FlowId, f64)> = Vec::with_capacity(self.active_flows.len());
         for (fid, flow) in &self.active_flows {
             let mut rate = f64::INFINITY;
-            for eid in &flow.path_edges {
+
+            // Zip path_edges and directed_edges to look up the undirected link
+            // parameters while counting active flows on the specific direction.
+            for (&eid, dir_edge) in flow.path_edges.iter().zip(flow.directed_edges.iter()) {
                 let n = self
                     .link_active_flows
-                    .get(eid)
+                    .get(dir_edge)
                     .map(|v| v.len() as f64)
                     .unwrap_or(0.0);
                 if n > 0.0 {
-                    let fair = self.link_bw_bpns[eid] / n;
+                    let fair = self.link_bw_bpns[&eid] / n;
                     if fair < rate {
                         rate = fair;
                     }

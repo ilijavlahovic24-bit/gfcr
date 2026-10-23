@@ -1,0 +1,10 @@
+[package]
+name = "routing"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+sim-core = { path = "../sim-core" }
+topology = { path = "../topology" }
+petgraph.workspace = true
+rand = "0.8"
