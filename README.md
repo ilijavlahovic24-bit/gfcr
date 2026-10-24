@@ -4,7 +4,7 @@ Discrete-event simulator for GPU interconnect fabrics (fat-tree topologies) with
 custom congestion-aware adaptive routing engine, built to model and reduce tail latency under the traffic patterns 
 typical of distributed ML training (all-reduce, all-to-all/MoE, pipeline parallelism).
 
-**Status:** In progress
+**Status:** Core Completed
 
 ## Overview
 
@@ -89,3 +89,6 @@ network layers of a distributed training pipeline - via a decoupled trace-file i
 
 ## Resources
 1. [A Scalable, Commodity Data Center Network Architecture], Mohammad Al-Fares, Alexander Loukissas , Amin Vahdat
+2. [https://docs.rs/petgraph/latest/petgraph/] - Rust petograph crate
+3. [Data Center Network Topologies:FatTree]-Hakim Weatherspoon
+4. [https://www.haskoning.com/en/newsroom/blogs/2024/what-is-discrete-event-simulation-and-how-does-it-work ] -What is discrete event simulation (DES) and how does it work
