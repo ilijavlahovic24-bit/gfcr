@@ -1,0 +1,9 @@
+{
+  "congested_links_count": 14,
+  "fct_p50_ns": 4029532,
+  "fct_p95_ns": 4029532,
+  "fct_p99_ns": 4029532,
+  "max_utilization_pct": 100.00000000000009,
+  "sim_time_ns": 4029532,
+  "total_flows": 240
+}

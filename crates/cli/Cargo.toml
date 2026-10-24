@@ -9,6 +9,10 @@ path = "src/main.rs"
 
 [dependencies]
 topology = { path = "../topology" }
+sim-core = { path = "../sim-core" }
+routing = { path = "../routing" }
+traffic-gen = { path = "../traffic-gen" }
+metrics = { path = "../metrics" }
 clap.workspace = true
 anyhow.workspace = true
-petgraph = "0.6.5"
+petgraph.workspace = true

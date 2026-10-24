@@ -61,6 +61,15 @@ gfcs-r/
 Key design decisions are documented as ADRs in `docs/adr/`, including:
 - **ADR-001** - Language choice: Rust over C++
 
+## Commands
+
+1. Run ECMP Baseline:
+   `cargo run -p cli -- --topology configs/topologies/fat_tree_k4.yaml --scenario all-to-all --router ecmp --out-dir ./output_ecmp`
+2. Run Adaptive Router:
+   `cargo run -p cli -- --topology configs/topologies/fat_tree_k4.yaml --scenario all-to-all --router adaptive --out-dir ./output_adaptive`
+3. Visualize Results:
+   `python viz/fct_distribution.py output_ecmp/fct.csv "ECMP" output_adaptive/fct.csv "Adaptive"`
+
 ## Relation to Other Projects
 
 GFCS-R is designed to optionally consume traffic traces from [FerumFS](#) 
@@ -69,13 +78,13 @@ network layers of a distributed training pipeline - via a decoupled trace-file i
 
 ## Roadmap
 
-- [ ] Phase 1 - Topology generator
-- [ ] Phase 2 - Discrete-event simulator core
-- [ ] Phase 3 - Traffic generator
-- [ ] Phase 4 - ECMP baseline routing
-- [ ] Phase 5 - Adaptive congestion-aware router
-- [ ] Phase 6 - Metrics & visualization
-- [ ] Phase 7 - Testing, comparison, polish
+- [+] Phase 1 - Topology generator
+- [+] Phase 2 - Discrete-event simulator core
+- [+] Phase 3 - Traffic generator
+- [+] Phase 4 - ECMP baseline routing
+- [+] Phase 5 - Adaptive congestion-aware router
+- [+] Phase 6 - Metrics & visualization
+- [+] Phase 7 - Testing, comparison, polish
 - [ ] Phase 8 (stretch) - Flit-level fidelity, dragonfly topology, FerumFS trace integration
 
 ## Resources
