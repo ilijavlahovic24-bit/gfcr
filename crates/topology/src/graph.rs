@@ -10,13 +10,28 @@ pub enum NodeKind {
     EdgeSwitch { pod: usize, index: usize },
     AggSwitch  { pod: usize, index: usize },
     CoreSwitch { index: usize },
+    DragonflyRouter { group: usize, index: usize },
 }
 
 #[derive(Debug, Clone)]
 pub struct Node {
     pub kind: NodeKind,
 }
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum LinkClass {
+    /// Fat-tree / generic
+    Generic,
+    /// Dragonfly: host <-> router.
+    Terminal,
+    /// Dragonfly: router <-> router, same group.
+    Local,
+    /// Dragonfly: router <-> router, different groups.
+    Global,
+}
 
+impl Default for LinkClass {
+    fn default() -> Self { Self::Generic }
+}
 /// Physical link. For MVP: one undirected edge = one full-duplex link.
 /// (the flow-level simulator will treat both directions as independent flows).
 #[derive(Debug, Clone)]
@@ -24,6 +39,7 @@ pub struct Link {
     pub bandwidth_gbps: f64,
     pub latency_ns: u64,
     pub buffer_size: usize,
+    pub class: LinkClass,
 }
 
 /// Wrapper around petgraph-a.
@@ -89,6 +105,17 @@ impl TopologyGraph {
     pub fn inner(&self) -> &Graph<Node, Link, Undirected> { &self.graph }
     pub(crate) fn inner_mut(&mut self) -> &mut Graph<Node, Link, Undirected> {
         &mut self.graph
+    }
+    pub fn add_node(&mut self, kind: NodeKind) -> NodeId {
+        self.graph.add_node(Node { kind })
+    }
+
+    pub fn add_link(&mut self, a: NodeId, b: NodeId, link: Link) -> petgraph::graph::EdgeIndex {
+        self.graph.add_edge(a, b, link)
+    }
+
+    pub fn add_link_bidir(&mut self, a: NodeId, b: NodeId, link: Link) -> petgraph::graph::EdgeIndex {
+        self.graph.add_edge(a, b, link)
     }
 }
 

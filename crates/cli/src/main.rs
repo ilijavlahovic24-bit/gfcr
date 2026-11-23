@@ -104,6 +104,7 @@ fn dump_graph(g: &TopologyGraph) {
             NodeKind::EdgeSwitch { pod, index } => format!("edge(pod={pod},idx={index})"),
             NodeKind::AggSwitch { pod, index } => format!("agg(pod={pod},idx={index})"),
             NodeKind::CoreSwitch { index } => format!("core(idx={index})"),
+            NodeKind::DragonflyRouter{group, index}=>format!("agg(pod={group},idx={index})"),
         };
         println!("  [{:>3}] {kind}", id.index());
     }

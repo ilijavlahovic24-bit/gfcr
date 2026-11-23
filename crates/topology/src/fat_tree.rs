@@ -96,10 +96,11 @@ pub fn generate(k: usize, link: Link) -> Result<TopologyGraph, TopologyError> {
 
 #[cfg(test)]
 mod tests {
+    use crate::graph::LinkClass;
     use super::*;
 
     fn link() -> Link {
-        Link { bandwidth_gbps: 100.0, latency_ns: 500, buffer_size: 100_000 }
+        Link { bandwidth_gbps: 100.0, latency_ns: 500, buffer_size: 100_000 ,class: LinkClass::Generic}
     }
 
     #[test]

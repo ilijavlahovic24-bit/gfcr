@@ -4,7 +4,7 @@ use std::path::Path;
 use serde::Deserialize;
 
 use crate::fat_tree;
-use crate::graph::{Link, TopologyGraph};
+use crate::graph::{Link, LinkClass, TopologyGraph};
 
 #[derive(Debug, Deserialize)]
 pub struct TopologyConfig {
@@ -31,6 +31,7 @@ impl LinkParams {
             bandwidth_gbps: self.bandwidth_gbps,
             latency_ns: self.latency_ns,
             buffer_size: self.buffer_size,
+            class: LinkClass::Generic
         }
     }
 }

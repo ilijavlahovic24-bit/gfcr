@@ -6,7 +6,7 @@ use petgraph::graph::{EdgeIndex, NodeIndex};
 use sim_core::{Flow, Router, Simulator};
 use sim_core::path::shortest_path;
 use topology::fat_tree::generate;
-use topology::graph::Link;
+use topology::graph::{Link, LinkClass};
 struct MockRouter;
 impl Router for MockRouter {
     fn route(
@@ -27,6 +27,7 @@ fn k4_graph() -> topology::TopologyGraph {
             bandwidth_gbps: 100.0,
             latency_ns: 500,
             buffer_size: 100_000,
+            class: LinkClass::Generic,
         },
     )
         .unwrap()

@@ -1,7 +1,7 @@
 use routing::ecmp::EcmpRouter;
 use sim_core::Simulator;
 use topology::fat_tree;
-use topology::graph::Link;
+use topology::graph::{Link, LinkClass};
 use traffic_gen::{all_to_all, ring_allreduce};
 #[test]
 fn ring_all_reduce_matches_theory() {
@@ -29,6 +29,7 @@ fn ring_all_reduce_matches_theory() {
         bandwidth_gbps,
         latency_ns,
         buffer_size: 100_000,
+        class: LinkClass::Generic
     }).unwrap();
 
     // Map to hosts in different pods (0, 4, 8, 12) for constant 6-hop path

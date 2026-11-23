@@ -1,12 +1,14 @@
 use routing::{adaptive::AdaptiveRouter, ecmp::EcmpRouter};
 use sim_core::{Flow, Simulator};
 use topology::{fat_tree, graph::Link};
+use topology::graph::LinkClass;
 
 fn k4_graph() -> topology::TopologyGraph {
     fat_tree::generate(4, Link {
         bandwidth_gbps: 100.0,
         latency_ns: 500,
         buffer_size: 100_000,
+        class: LinkClass::Generic,
     }).unwrap()
 }
 
