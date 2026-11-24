@@ -123,24 +123,20 @@ pub fn generate(
     }
 
     // 5) Global — ruter (i,r) -> grupa (i + r*h + k) mod g, ruter r, k=1..=h
-    let mut seen: std::collections::HashSet<(usize, usize)> = std::collections::HashSet::new();
+    //let mut seen: std::collections::HashSet<(usize, usize)> = std::collections::HashSet::new();
     for i in 0..g {
-        for r in 0..a {
-            for k in 1..=h {
-                let j = (i + r * h + k) % g;
-                if j == i { continue; }
-                let id1 = params.router_id(i, r);
-                let id2 = params.router_id(j, r);
-                let key = if id1 < id2 { (id1, id2) } else { (id2, id1) };
-                if seen.insert(key) {
-                    t.add_link(nid(id1), nid(id2), Link {
-                        bandwidth_gbps: lp.global_bw,
-                        latency_ns:     lp.global_lat,
-                        buffer_size:    lp.global_buf,
-                        class:          LinkClass::Global,
-                    });
-                }
-            }
+        for j in (i + 1)..g {
+            let d = j - i;
+            let r_i = (d - 1) / h;
+            let r_j = (g - d - 1) / h;
+            let id1 = params.router_id(i, r_i);
+            let id2 = params.router_id(j, r_j);
+            t.add_link(nid(id1), nid(id2), Link {
+                bandwidth_gbps: lp.global_bw,
+                latency_ns:     lp.global_lat,
+                buffer_size:    lp.global_buf,
+                class:          LinkClass::Global,
+            });
         }
     }
 
