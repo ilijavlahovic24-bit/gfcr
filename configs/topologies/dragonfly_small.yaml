@@ -1,0 +1,16 @@
+topology:
+  kind: dragonfly
+  a: 4
+  p: 4
+  h: 3
+  g: 13
+  link:
+    terminal_bw: 200.0
+    terminal_lat: 100
+    terminal_buf: 64
+    local_bw: 200.0
+    local_lat: 100
+    local_buf: 64
+    global_bw: 100.0
+    global_lat: 500
+    global_buf: 128

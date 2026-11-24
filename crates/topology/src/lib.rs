@@ -1,7 +1,7 @@
 pub mod config;
 pub mod fat_tree;
 pub mod graph;
-mod dragonfly;
+pub mod dragonfly;
 
 pub use config::{LinkParams, TopologyConfig, TopologyKind, TopologyError};
 pub use graph::{Link, Node, NodeId, NodeKind, TopologyGraph};

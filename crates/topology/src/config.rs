@@ -3,7 +3,7 @@ use std::path::Path;
 
 use serde::Deserialize;
 
-use crate::fat_tree;
+use crate::{dragonfly, fat_tree};
 use crate::graph::{Link, LinkClass, TopologyGraph};
 
 #[derive(Debug, Deserialize)]
@@ -11,11 +11,31 @@ pub struct TopologyConfig {
     pub topology: TopologyKind,
     pub links: LinkParams,
 }
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct LinkParamsYaml {
+    pub terminal_bw:  Option<f64>,
+    pub terminal_lat: Option<u64>,
+    pub terminal_buf: Option<usize>,
+    pub local_bw:     Option<f64>,
+    pub local_lat:    Option<u64>,
+    pub local_buf:    Option<usize>,
+    pub global_bw:    Option<f64>,
+    pub global_lat:   Option<u64>,
+    pub global_buf:   Option<usize>,
+}
 
 #[derive(Debug, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum TopologyKind {
     FatTree { k: usize },
+    Dragonfly {
+        a: usize,
+        p: usize,
+        h: usize,
+        g: usize,
+        #[serde(default)]
+        link: Option<LinkParamsYaml>,
+    },
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -46,6 +66,27 @@ impl TopologyConfig {
     pub fn build(&self) -> Result<TopologyGraph, TopologyError> {
         match &self.topology {
             TopologyKind::FatTree { k } => fat_tree::generate(*k, self.links.to_link()),
+            TopologyKind::Dragonfly { a, p, h, g, link } => {
+                let d = dragonfly::LinkParams::default();
+                let lp = match link {
+                    Some(y) => dragonfly::LinkParams {
+                        terminal_bw:  y.terminal_bw .unwrap_or(d.terminal_bw),
+                        terminal_lat: y.terminal_lat.unwrap_or(d.terminal_lat),
+                        terminal_buf: y.terminal_buf.unwrap_or(d.terminal_buf),
+                        local_bw:     y.local_bw    .unwrap_or(d.local_bw),
+                        local_lat:    y.local_lat   .unwrap_or(d.local_lat),
+                        local_buf:    y.local_buf   .unwrap_or(d.local_buf),
+                        global_bw:    y.global_bw   .unwrap_or(d.global_bw),
+                        global_lat:   y.global_lat  .unwrap_or(d.global_lat),
+                        global_buf:   y.global_buf  .unwrap_or(d.global_buf),
+                    },
+                    None => d,
+                };
+                dragonfly::generate(
+                    dragonfly::DragonflyParams { a: *a, p: *p, h: *h, g: *g },
+                    lp,
+                )
+            }
         }
     }
 }
@@ -58,4 +99,6 @@ pub enum TopologyError {
     Io(#[from] std::io::Error),
     #[error("YAML error: {0}")]
     Yaml(#[from] serde_yaml::Error),
+    #[error("dragonfly: {0}")]
+    Dragonfly(String),
 }
