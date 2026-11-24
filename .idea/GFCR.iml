@@ -12,6 +12,7 @@
       <sourceFolder url="file://$MODULE_DIR$/crates/metrics/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/routing/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/crates/routing/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/crates/topology/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/crates/sim-core/target" />
       <excludeFolder url="file://$MODULE_DIR$/crates/topology/target" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
